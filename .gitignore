@@ -12,6 +12,7 @@
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+*.sln
 .gitattributes
 
 # User-specific files (MonoDevelop/Xamarin Studio)
