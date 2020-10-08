@@ -29,108 +29,264 @@ namespace Integrity {
 	// * check *
 	// *********
 
-	template <typename B> void check(B condition);
+	/// <summary>
+	/// Placeholder to prevent non-bool being passed in as first parameter.
+	/// </summary>
+	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
+	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
+	template <typename B> void check(B youNeedABool);
+	
+	/// <summary>
+	/// Placeholder to prevent non-bool being passed in as first parameter.
+	/// </summary>
+	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
+	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
+	template <typename B, typename T1> void check(B youNeedABool, const T1&);
+	
+	/// <summary>
+	/// Placeholder to prevent non-bool being passed in as first parameter.
+	/// </summary>
+	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
+	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
+	template <typename B, typename T1, typename T2> void check(B youNeedABool, T1, T2);
+	
+	/// <summary>
+	/// Placeholder to prevent non-bool being passed in as first parameter.
+	/// </summary>
+	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
+	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
+	template <typename B, typename T1, typename T2, typename T3> void check(B youNeedABool, T1, T2, T3);
 
+	/// <summary>
+	/// Checks whether a condition is true, if not raises a logic_error with default message
+	/// </summary>
+	/// <param name="condition">The condition to check is true.</param>
+	/// <exception cref="logic_error">Raised if condition is false</exception>
 	template<> inline void check<bool>(bool condition) {
 		if (!condition) {
 			throw std::logic_error(defaultExceptionMessage);
 		}
 	}
 
-	template<typename T1> inline void check(bool condition, T1 messageArg1) {
+	/// <summary>
+	/// Checks whether a condition is true, if not raises a logic_error
+	/// </summary>
+	/// <param name="condition">The condition to check is true.</param>
+	/// <param name="T1">String or primitive to build exception message from</param>
+	/// <exception cref="logic_error">Raised if condition is false</exception>
+	template<typename T1> inline void check(bool condition, const T1 messageArg1) {
 		if (!condition) {
 			throwWithMessage({ toTypeValue(messageArg1) });
 		}
 	}
+
+	/// <summary>
+	/// Checks whether a condition is true, if not raises a logic_error
+	/// </summary>
+	/// <param name="condition">The condition to check is true.</param>
+	/// <param name="T1">String or primitive to build exception message from, use {} for optional substitution of T2</param>
+	/// <param name="T2">String or primitive to build exception message from</param>
+	/// <exception cref="logic_error">Raised if condition is false</exception>
 	template<typename T1, typename T2> inline void check(bool condition, T1 messageArg1, T2 messageArg2) {
 		if (!condition) {
 			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
 		}
 	}
+	
+	/// <summary>
+	/// Checks whether a condition is true, if not raises a logic_error
+	/// </summary>
+	/// <param name="condition">The condition to check is true.</param>
+	/// <param name="T1">String or primitive to build exception message from, use {} for optional substitution of T2 and T3</param>
+	/// <param name="T2">String or primitive to build exception message from</param>
+	/// <param name="T3">String or primitive to build exception message from</param>
+	/// <exception cref="logic_error">Raised if condition is false</exception>
 	template<typename T1, typename T2, typename T3> inline void check(bool condition, T1 messageArg1, T2 messageArg2, T3 messageArg3) {
 		if (!condition) {
 			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2), toTypeValue(messageArg3) });
 		}
 	}
 
-	inline void checkM(bool condition, std::function<void(std::stringstream&)> messageFunc) {
+	template<typename B> inline void checkM(B condition, const std::function<void(std::stringstream&)> messageFunc);
+
+	/// <summary>
+	/// Checks whether a condition is true, if not raises a logic_error where you can pass a lambda function to build the message
+	/// </summary>
+	/// <param name="condition">The condition to check is true.</param>
+	/// <param name="messageFunc">Example: [=](Integrity::out out) { out &lt;&lt; whateverYouWant; }</param>
+	/// <exception cref="logic_error">Raised if condition is false</exception>
+	/// <remarks>
+	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
+	/// </remarks> 
+	template<> inline void checkM<bool>(bool condition, const std::function<void(std::stringstream&)> messageFunc) {
 		if (!condition) {
 			throw std::logic_error(makeString(messageFunc));
 		}
 	}
 
-	// ********
-	// * fail *
-	// ********
-
+	// ******************************************************************************************************************
+	// * -------------------------------------------------- fail ------------------------------------------------------ *
+	// ******************************************************************************************************************
+			
+	/// <summary>
+	/// Raises a logic_error with a default message
+	/// </summary>
+	/// <exception cref="logic_error"></exception>
 	inline void fail() {
 		throw std::logic_error(defaultExceptionMessage);
 	}
 
+	/// <summary>
+	/// Raises a logic_error where you can pass a lambda function to build the message
+	/// </summary>
+	/// <param name="messageFunc">Example: [=](Integrity::out out) { out &lt;&lt; whateverYouWant; }</param>
+	/// <exception cref="logic_error">Raised if condition is false</exception>
+	/// <remarks>
+	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
+	/// </remarks>
 	inline void failM(std::function<void(std::stringstream&)> messageFunc) {
 		throw std::logic_error(makeString(messageFunc));
 	}
+
+	/// <summary>
+	/// Raises a logic_error
+	/// </summary>
+	/// <param name="T1">String or primitive to build exception message from</param>
+	/// <exception cref="logic_error"></exception>
 	template<typename T1> inline void fail(T1 messageArg1) {
 		throwWithMessage({ toTypeValue(messageArg1) });
 	}
+
+	/// <summary>
+	/// Raises a logic_error
+	/// </summary>
+	/// <param name="T1">String or primitive to build exception message from, use {} for optional substitution of T2</param>
+	/// <param name="T2">String or primitive to build exception message from</param>
+	/// <exception cref="logic_error"></exception>
 	template<typename T1, typename T2> inline void fail(T1 messageArg1, T2 messageArg2) {
 		throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
 	}
 
-	// **********************
-	// * checkIsValidNumber *
-	// **********************
+	// ******************************************************************************************************************
+	// * -------------------------------------- checkIsValidNumber ---------------------------------------------------- *
+	// ******************************************************************************************************************
 
+	/// <summary>
+	/// Raises a logic_error if the number is NaN or +-Infinity
+	/// </summary>
+	/// <param name="value">float, double or long double</param>
+	/// <exception cref="logic_error">Message will be 'Nan' or '+Infinity' or '-Infinity'</exception>
 	template<typename N> inline void checkIsValidNumber(const N value) {
 		if (std::isnan(value) || std::isinf(value)) {
 			throwInvalidFloat(value);
 		}
 	}
+
+	/// <summary>
+	/// Raises a logic_error if the number is NaN or +-Infinity
+	/// </summary>
+	/// <param name="value">float, double or long double</param>
+	/// <param name="T1">String or primitive to build exception message from</param>
+	/// <exception cref="logic_error"></exception>
 	template<typename N, typename T1> inline void checkIsValidNumber(const N value, T1 messageArg1) {
 		if (std::isnan(value) || std::isinf(value)) {
 			throwWithMessage({ toTypeValue(messageArg1) });
 		}
 	}
+
+	/// <summary>
+	/// Raises a logic_error if the number is NaN or +-Infinity
+	/// </summary>
+	/// <param name="value">float, double or long double</param>
+	/// <param name="T1">String or primitive to build exception message from, use {} for optional substitution of T2</param>
+	/// <param name="T2">String or primitive to build exception message from</param>
+	/// <exception cref="logic_error"></exception>
 	template<typename N, typename T1, typename T2> inline void checkIsValidNumber(const N value, T1 messageArg1, T2 messageArg2) {
 		if (std::isnan(value) || std::isinf(value)) {
 			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
 		}
 	}
+
+	/// <summary>
+	/// Raises a logic_error if the number is NaN or +-Infinity
+	/// </summary>
+	/// <param name="value">float, double or long double</param>
+	/// <param name="messageFunc">Example: [=](Integrity::out out) { out &lt;&lt; whateverYouWant; }</param>
+	/// <exception cref="logic_error"></exception>
+	/// <remarks>
+	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
+	/// </remarks>
 	template<typename N> inline void checkIsValidNumberM(const N value, std::function<void(std::stringstream&)> messageFunc) {
 		if (std::isnan(value) || std::isinf(value)) {
 			throw std::logic_error(makeString(messageFunc));
 		}
 	}
 
-	// ****************
-	// * checkNotNull *
-	// ****************
+	// ******************************************************************************************************************
+	// * ---------------------------------------------- checkNotNull -------------------------------------------------- *
+	// ******************************************************************************************************************
 
+	/// <summary>
+	/// Raises a logic_error if the pointer is null (i.e. 0)
+	/// </summary>
+	/// <param name="pointer">a pointer to check for nullness</param>
+	/// <exception cref="logic_error">Null pointer</exception>
 	inline void checkNotNull(const void* pointer) {
 		if (pointer == 0) {
 			throw std::logic_error("Null pointer");
 		}
 	}
+
+	/// <summary>
+	/// Raises a logic_error if the pointer is null (i.e. 0)
+	/// </summary>
+	/// <param name="pointer">a pointer to check for nullness</param>
+	/// <param name="T1">String or primitive to build exception message from</param>
+	/// <exception cref="logic_error"></exception>
 	template<typename T1> inline void checkNotNull(const void* pointer, T1 messageArg1) {
 		if (pointer == 0) {
 			throwWithMessage({ toTypeValue(messageArg1) });
 		}
 	}
+
+	/// <summary>
+	/// Raises a logic_error if the pointer is null (i.e. 0)
+	/// </summary>
+	/// <param name="pointer">a pointer to check for nullness</param>
+	/// <param name="T1">String or primitive to build exception message from, use {} for optional substitution of T2</param>
+	/// <param name="T2">String or primitive to build exception message from</param>
+	/// <exception cref="logic_error"></exception>
 	template<typename T1, typename T2> inline void checkNotNull(const void* pointer, T1 messageArg1, T2 messageArg2) {
 		if (pointer == 0) {
 			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
 		}
 	}
 
+	/// <summary>
+	/// Raises a logic_error if the pointer is null (i.e. 0)
+	/// </summary>
+	/// <param name="pointer">a pointer to check for nullness</param>
+	/// <param name="messageFunc">Example: [=](Integrity::out out) { out &lt;&lt; whateverYouWant; }</param>
+	/// <exception cref="logic_error"></exception>
+	/// <remarks>
+	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
+	/// </remarks>
 	inline void checkNotNullM(const void* pointer, std::function<void(std::stringstream&)> messageFunc) {
 		if (pointer == 0) {
 			throw std::logic_error(makeString(messageFunc));
 		}
 	}
 
-	// *****************************
-	// * checkStringNotNullOrEmpty *
-	// *****************************
+	// ******************************************************************************************************************
+	// * ---------------------------------------- checkStringNotNullOrEmpty ------------------------------------------- *
+	// ******************************************************************************************************************
+
+
+	template<typename S> inline void checkStringNotNullOrEmpty(const S& s) {
+		if (s.empty() == 0) {
+			throw std::logic_error(defaultEmptyStringMessage);
+		}
+	}
 
 	inline void checkStringNotNullOrEmpty(const char* s) {
 		if (s == 0) {
@@ -140,48 +296,13 @@ namespace Integrity {
 			throw std::logic_error(defaultEmptyStringMessage);
 		}
 	}
-	inline void checkStringNotNullOrEmpty(std::string& s) {
-		if (s.empty() == 0) {
-			throw std::logic_error(defaultEmptyStringMessage);
-		}
-	}
-	inline void checkStringNotNullOrEmpty(std::wstring& s) {
-		if (s.empty() == 0) {
-			throw std::logic_error(defaultEmptyStringMessage);
-		}
-	}
-	inline void checkStringNotNullOrEmpty(std::u16string& s) {
-		if (s.empty() == 0) {
-			throw std::logic_error(defaultEmptyStringMessage);
-		}
-	}
-	inline void checkStringNotNullOrEmpty(std::u32string& s) {
-		if (s.empty() == 0) {
-			throw std::logic_error(defaultEmptyStringMessage);
-		}
-	}
 
 	template<typename T1> inline void checkStringNotNullOrEmpty(const char* s, T1 messageArg1) {
 		if (s == 0 || std::strlen(s) == 0) {
 			throwWithMessage({ toTypeValue(messageArg1) });
 		}
 	}
-	template<typename T1> inline void checkStringNotNullOrEmpty(std::string& s, T1 messageArg1) {
-		if (s.empty() == 0) {
-			throwWithMessage({ toTypeValue(messageArg1) });
-		}
-	}
-	template<typename T1> inline void checkStringNotNullOrEmpty(std::wstring& s, T1 messageArg1) {
-		if (s.empty() == 0) {
-			throwWithMessage({ toTypeValue(messageArg1) });
-		}
-	}
-	template<typename T1> inline void checkStringNotNullOrEmpty(std::u16string& s, T1 messageArg1) {
-		if (s.empty() == 0) {
-			throwWithMessage({ toTypeValue(messageArg1) });
-		}
-	}
-	template<typename T1> inline void checkStringNotNullOrEmpty(std::u32string& s, T1 messageArg1) {
+	template<typename S,typename T1> inline void checkStringNotNullOrEmpty(const S& s, T1 messageArg1) {
 		if (s.empty() == 0) {
 			throwWithMessage({ toTypeValue(messageArg1) });
 		}
@@ -192,22 +313,7 @@ namespace Integrity {
 			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
 		}
 	}
-	template<typename T1, typename T2> inline void checkStringNotNullOrEmpty(std::string& s, T1 messageArg1, T2 messageArg2) {
-		if (s.empty() == 0) {
-			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
-		}
-	}
-	template<typename T1, typename T2> inline void checkStringNotNullOrEmpty(std::wstring& s, T1 messageArg1, T2 messageArg2) {
-		if (s.empty() == 0) {
-			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
-		}
-	}
-	template<typename T1, typename T2> inline void checkStringNotNullOrEmpty(std::u16string& s, T1 messageArg1, T2 messageArg2) {
-		if (s.empty() == 0) {
-			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
-		}
-	}
-	template<typename T1, typename T2> inline void checkStringNotNullOrEmpty(std::u32string& s, T1 messageArg1, T2 messageArg2) {
+	template<typename S, typename T1, typename T2> inline void checkStringNotNullOrEmpty(const S& s, T1 messageArg1, T2 messageArg2) {
 		if (s.empty() == 0) {
 			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
 		}
@@ -230,7 +336,7 @@ namespace Integrity {
 	struct TypeValue {
 		DispType type;
 		std::string value;
-		TypeValue(DispType theType, std::string theValue) {
+		TypeValue(DispType theType, const std::string& theValue) {
 			type = theType;
 			value = theValue;
 		}
@@ -299,16 +405,16 @@ namespace Integrity {
 	template<typename T> TypeValue toTypeValue(T primitive) {
 		return TypeValue(DispType::isNumber, std::to_string(primitive));
 	}
-	template<> TypeValue toTypeValue<bool>(bool value) {
+	template<> TypeValue toTypeValue<bool>(const bool value) {
 		return TypeValue(DispType::isBool, value ? "True" : "False");
 	}
-	template<> TypeValue toTypeValue<char>(char value) {
+	template<> TypeValue toTypeValue<char>(const char value) {
 		return TypeValue(DispType::isChar, std::string(1, value));
 	}
-	template<> TypeValue toTypeValue<unsigned char>(unsigned char value) {
+	template<> TypeValue toTypeValue<unsigned char>(const unsigned char value) {
 		return TypeValue(DispType::isChar, std::string(1, value));
 	}
-	template<> TypeValue toTypeValue<char16_t>(char16_t value) {
+	template<> TypeValue toTypeValue<char16_t>(const char16_t value) {
 		std::stringstream ss;
 		if (value > 0xff) {
 			ss << "0x" << std::hex << std::setfill('0') << std::setw(2 * sizeof(char16_t)) << std::uppercase << (long) value;
@@ -318,7 +424,7 @@ namespace Integrity {
 		}
 		return TypeValue(DispType::isChar, ss.str());
 	}
-	template<> TypeValue toTypeValue<char32_t>(char32_t value) {
+	template<> TypeValue toTypeValue<char32_t>(const char32_t value) {
 		std::stringstream ss;
 		if (value > 0xff) {
 			ss << "0x" << std::hex << std::setfill('0') << std::setw(2 * sizeof(char32_t)) << std::uppercase << (long) value;
@@ -328,7 +434,7 @@ namespace Integrity {
 		}
 		return TypeValue(DispType::isChar, ss.str());
 	}
-	template<> TypeValue toTypeValue<wchar_t>(wchar_t value) {
+	template<> TypeValue toTypeValue<wchar_t>(const wchar_t value) {
 		std::stringstream ss;
 		if (value > 0xff) {
 			ss << "0x" << std::hex << std::setfill('0') << std::setw(2 * sizeof(wchar_t)) << std::uppercase << (long) value;
@@ -338,7 +444,7 @@ namespace Integrity {
 		}
 		return TypeValue(DispType::isChar, ss.str());
 	}
-	template<> TypeValue toTypeValue<std::string>(std::string value) {
+	TypeValue toTypeValue(const std::string& value) {
 		return TypeValue(DispType::isString, value);
 	}
 	// string conversions...

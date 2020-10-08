@@ -12,12 +12,23 @@ void fail(const char* message) {
     }
 }
 
+class AnExampleClass {
+public:
+    int a = 1;
+    AnExampleClass();
+};
+
+AnExampleClass::AnExampleClass() {}
+
+
 void tests_which_should_not_throw() {
     cout << "Tests which should not throw an exception...\n";
 
     float f1 = 1.1f;
     double d1 = 1.1;
     long double d2 = 1.2;
+    const char* aCharStar = "abc";
+    AnExampleClass anExampleClass;
 
     try {
 
@@ -45,6 +56,13 @@ void tests_which_should_not_throw() {
         Integrity::checkNotNull(&f1, "message");
         Integrity::checkNotNull(&f1, "message", d1);
         Integrity::checkNotNullM(&f1, [=](Integrity::out out) { out << "message" << d1 << d2; });
+        Integrity::checkNotNullM(aCharStar, [=](Integrity::out out) { out << "message" << d1 << d2; });
+        Integrity::checkNotNull(aCharStar);
+        Integrity::checkNotNull(aCharStar, "message");
+        Integrity::checkNotNull(aCharStar, "m1", "m2");
+        Integrity::checkNotNull(&anExampleClass);
+        Integrity::checkNotNull(&anExampleClass, "m1");
+        Integrity::checkNotNull(&anExampleClass, "m1", "m2");
 
         cout << "... passed" << endl;
     }
@@ -63,7 +81,10 @@ void tests_which_should_not_compile() {
     unsigned long anUnsignedLong = 200; // prevented by private long long option
     char aChar = 'c'; // prevented by private long long option
     long double aLongDouble = 1.1; // prevented by private long long option
+    AnExampleClass anExampleClass;
 
+    //Integrity::checkNotNullM(anExampleClass, [=](Integrity::out out) { out << "message"; });
+    //Integrity::check(aLong = anInt, "oopsies");
     //Integrity::check(aCharStarPointer);
     //Integrity::check(anInt);
     //Integrity::check(anUnsignedInt);
@@ -80,6 +101,8 @@ void tests_which_should_not_compile() {
     //Integrity::checkIsValidNumber(1);
     //Integrity::checkIsValidNumber("a");
     //Integrity::checkIsValidNumber('a');
+
+    //Integrity::checkNotNullM(anInt, [](std::stringstream& ss) {});
 }
 
 void expect_throw(function<void()> func, const char* expectMessage) {
