@@ -16,6 +16,9 @@
 * Has to be in a namespace not in a class otherwise g++ does not compile it
 */
 namespace Integrity {
+
+	static const char* VERSION = "1.0.0";
+
 	static constexpr const char* defaultExceptionMessage = "Integrity check failed";
 	static constexpr const char* defaultNullPointerMessage = "Null pointer";
 	static constexpr const char* defaultEmptyStringMessage = "Empty string";
