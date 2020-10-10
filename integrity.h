@@ -9,6 +9,12 @@
 #include <cstring>
 #include <cmath>
  
+
+/*
+* Notes
+* Compiler does not allow default arguments on function templates
+* Has to be in a namespace not in a class otherwise g++ does not compile it
+*/
 namespace Integrity {
 	static constexpr const char* defaultExceptionMessage = "Integrity check failed";
 	static constexpr const char* defaultNullPointerMessage = "Null pointer";
@@ -16,94 +22,66 @@ namespace Integrity {
 
 	enum class DispType;
 	struct TypeValue;
-	static std::string makeString(const std::vector<TypeValue>& items);
+	static std::string makeString(const char* defaultMessage, const std::vector<TypeValue>& items);
 	static std::string makeString(std::function<void(std::stringstream&)> messageFunc);
-	static void throwWithMessage(const std::vector<Integrity::TypeValue>& items);
-	template<typename T> static std::string getFloatAppropriateMessage(T value);
+	static void throwWithMessage(const char* defaultMessage, const std::vector<Integrity::TypeValue>& items);
+	template<typename T> static const char* getFloatAppropriateMessage(T value);
 	template<typename T> TypeValue toTypeValue(T primitive);
-	template<typename N> std::string throwInvalidFloat(N value);
 
 	typedef std::stringstream& out;
 
-	// *********
-	// * check *
-	// *********
+	class NonType {
+	};
 
-	/// <summary>
-	/// Placeholder to prevent non-bool being passed in as first parameter.
-	/// </summary>
-	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
-	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
-	template <typename B> void check(B youNeedABool);
-	
-	/// <summary>
-	/// Placeholder to prevent non-bool being passed in as first parameter.
-	/// </summary>
-	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
-	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
-	template <typename B, typename T1> void check(B youNeedABool, const T1&);
-	
-	/// <summary>
-	/// Placeholder to prevent non-bool being passed in as first parameter.
-	/// </summary>
-	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
-	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
-	template <typename B, typename T1, typename T2> void check(B youNeedABool, T1, T2);
-	
-	/// <summary>
-	/// Placeholder to prevent non-bool being passed in as first parameter.
-	/// </summary>
-	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
-	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
-	template <typename B, typename T1, typename T2, typename T3> void check(B youNeedABool, T1, T2, T3);
+	NonType nt;
+
+	// ******************************************************************************************************************
+	// * -------------------------------------------------- check------------------------------------------------------ *
+	// ******************************************************************************************************************
 
 	/// <summary>
 	/// Checks whether a condition is true, if not raises a logic_error with default message
 	/// </summary>
 	/// <param name="condition">The condition to check is true.</param>
 	/// <exception cref="logic_error">Raised if condition is false</exception>
-	template<> inline void check<bool>(bool condition) {
+	inline void check(bool condition) {
 		if (!condition) {
 			throw std::logic_error(defaultExceptionMessage);
 		}
 	}
 
 	/// <summary>
-	/// Checks whether a condition is true, if not raises a logic_error
+	/// Checks whether a condition is true, if not raises a logic_error with given message
 	/// </summary>
 	/// <param name="condition">The condition to check is true.</param>
-	/// <param name="T1">String or primitive to build exception message from</param>
 	/// <exception cref="logic_error">Raised if condition is false</exception>
-	template<typename T1> inline void check(bool condition, const T1 messageArg1) {
+	inline void check(bool condition, const char* message) {
 		if (!condition) {
-			throwWithMessage({ toTypeValue(messageArg1) });
+			throw std::logic_error(message);
 		}
 	}
+
+	/// <summary>
+	/// Placeholder to prevent non-bool being passed in as first parameter.
+	/// </summary>
+	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
+	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
+	template<typename NONBOOL, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
+	void check(NONBOOL youNeedABoolHere, M1 m1 = nt, M2 m2 = nt, M3 m3 = nt, M4 m4 = nt);
 
 	/// <summary>
 	/// Checks whether a condition is true, if not raises a logic_error
 	/// </summary>
 	/// <param name="condition">The condition to check is true.</param>
-	/// <param name="T1">String or primitive to build exception message from, use {} for optional substitution of T2</param>
-	/// <param name="T2">String or primitive to build exception message from</param>
+	/// <param name="M1">Optional string or primitive</param>
+	/// <param name="M2">Optional string or primitive</param>
+	/// <param name="M3">Optional string or primitive</param>
+	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error">Raised if condition is false</exception>
-	template<typename T1, typename T2> inline void check(bool condition, T1 messageArg1, T2 messageArg2) {
+	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
+	void check(bool condition, M1 m1 = nt, M2 m2 = nt, M3 m3 = nt, M4 m4 = nt) {
 		if (!condition) {
-			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
-		}
-	}
-	
-	/// <summary>
-	/// Checks whether a condition is true, if not raises a logic_error
-	/// </summary>
-	/// <param name="condition">The condition to check is true.</param>
-	/// <param name="T1">String or primitive to build exception message from, use {} for optional substitution of T2 and T3</param>
-	/// <param name="T2">String or primitive to build exception message from</param>
-	/// <param name="T3">String or primitive to build exception message from</param>
-	/// <exception cref="logic_error">Raised if condition is false</exception>
-	template<typename T1, typename T2, typename T3> inline void check(bool condition, T1 messageArg1, T2 messageArg2, T3 messageArg3) {
-		if (!condition) {
-			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2), toTypeValue(messageArg3) });
+			throwWithMessage(defaultExceptionMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 	}
 
@@ -136,6 +114,10 @@ namespace Integrity {
 		throw std::logic_error(defaultExceptionMessage);
 	}
 
+	inline void fail(const char* message) {
+		throw std::logic_error(message);
+	}
+
 	/// <summary>
 	/// Raises a logic_error where you can pass a lambda function to build the message
 	/// </summary>
@@ -151,34 +133,25 @@ namespace Integrity {
 	/// <summary>
 	/// Raises a logic_error
 	/// </summary>
-	/// <param name="T1">String or primitive to build exception message from</param>
+	/// <param name="M1">Optional string or primitive</param>
+	/// <param name="M2">Optional string or primitive</param>
+	/// <param name="M3">Optional string or primitive</param>
+	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error"></exception>
-	template<typename T1> inline void fail(T1 messageArg1) {
-		throwWithMessage({ toTypeValue(messageArg1) });
-	}
-
-	/// <summary>
-	/// Raises a logic_error
-	/// </summary>
-	/// <param name="T1">String or primitive to build exception message from, use {} for optional substitution of T2</param>
-	/// <param name="T2">String or primitive to build exception message from</param>
-	/// <exception cref="logic_error"></exception>
-	template<typename T1, typename T2> inline void fail(T1 messageArg1, T2 messageArg2) {
-		throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
+	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
+	void fail(M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+		throwWithMessage(defaultExceptionMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 	}
 
 	// ******************************************************************************************************************
 	// * -------------------------------------- checkIsValidNumber ---------------------------------------------------- *
 	// ******************************************************************************************************************
 
-	/// <summary>
-	/// Raises a logic_error if the number is NaN or +-Infinity
-	/// </summary>
-	/// <param name="value">float, double or long double</param>
-	/// <exception cref="logic_error">Message will be 'Nan' or '+Infinity' or '-Infinity'</exception>
-	template<typename N> inline void checkIsValidNumber(const N value) {
+
+	template<typename N>
+	inline void checkIsValidNumber(const N value, const char* message) {
 		if (std::isnan(value) || std::isinf(value)) {
-			throwInvalidFloat(value);
+			throw std::logic_error(message);
 		}
 	}
 
@@ -186,24 +159,16 @@ namespace Integrity {
 	/// Raises a logic_error if the number is NaN or +-Infinity
 	/// </summary>
 	/// <param name="value">float, double or long double</param>
-	/// <param name="T1">String or primitive to build exception message from</param>
+	/// <param name="M1">Optional string or primitive</param>
+	/// <param name="M2">Optional string or primitive</param>
+	/// <param name="M3">Optional string or primitive</param>
+	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error"></exception>
-	template<typename N, typename T1> inline void checkIsValidNumber(const N value, T1 messageArg1) {
+	template<typename N, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
+	inline void checkIsValidNumber(const N value, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
 		if (std::isnan(value) || std::isinf(value)) {
-			throwWithMessage({ toTypeValue(messageArg1) });
-		}
-	}
-
-	/// <summary>
-	/// Raises a logic_error if the number is NaN or +-Infinity
-	/// </summary>
-	/// <param name="value">float, double or long double</param>
-	/// <param name="T1">String or primitive to build exception message from, use {} for optional substitution of T2</param>
-	/// <param name="T2">String or primitive to build exception message from</param>
-	/// <exception cref="logic_error"></exception>
-	template<typename N, typename T1, typename T2> inline void checkIsValidNumber(const N value, T1 messageArg1, T2 messageArg2) {
-		if (std::isnan(value) || std::isinf(value)) {
-			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
+			const char* defaultMessage = getFloatAppropriateMessage(value);
+			throwWithMessage(defaultMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 	}
 
@@ -230,7 +195,7 @@ namespace Integrity {
 	/// Raises a logic_error if the pointer is null (i.e. 0)
 	/// </summary>
 	/// <param name="pointer">a pointer to check for nullness</param>
-	/// <exception cref="logic_error">Null pointer</exception>
+	/// <exception cref="logic_error">message will be 'Null pointer'</exception>
 	inline void checkNotNull(const void* pointer) {
 		if (pointer == 0) {
 			throw std::logic_error("Null pointer");
@@ -241,11 +206,11 @@ namespace Integrity {
 	/// Raises a logic_error if the pointer is null (i.e. 0)
 	/// </summary>
 	/// <param name="pointer">a pointer to check for nullness</param>
-	/// <param name="T1">String or primitive to build exception message from</param>
+	/// <param name="message">message to use in the exception</param>
 	/// <exception cref="logic_error"></exception>
-	template<typename T1> inline void checkNotNull(const void* pointer, T1 messageArg1) {
+	inline void checkNotNull(const void* pointer, const char* message) {
 		if (pointer == 0) {
-			throwWithMessage({ toTypeValue(messageArg1) });
+			throw std::logic_error(message);
 		}
 	}
 
@@ -253,12 +218,15 @@ namespace Integrity {
 	/// Raises a logic_error if the pointer is null (i.e. 0)
 	/// </summary>
 	/// <param name="pointer">a pointer to check for nullness</param>
-	/// <param name="T1">String or primitive to build exception message from, use {} for optional substitution of T2</param>
-	/// <param name="T2">String or primitive to build exception message from</param>
+	/// <param name="M1">Optional string or primitive</param>
+	/// <param name="M2">Optional string or primitive</param>
+	/// <param name="M3">Optional string or primitive</param>
+	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error"></exception>
-	template<typename T1, typename T2> inline void checkNotNull(const void* pointer, T1 messageArg1, T2 messageArg2) {
+	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
+	inline void checkNotNull(const void* pointer, M1 & m1 = nt, M2 & m2 = nt, M3 & m3 = nt, M4 & m4 = nt) {
 		if (pointer == 0) {
-			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
+			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 	}
 
@@ -281,45 +249,64 @@ namespace Integrity {
 	// * ---------------------------------------- checkStringNotNullOrEmpty ------------------------------------------- *
 	// ******************************************************************************************************************
 
-
-	template<typename S> inline void checkStringNotNullOrEmpty(const S& s) {
-		if (s.empty() == 0) {
-			throw std::logic_error(defaultEmptyStringMessage);
-		}
-	}
-
-	inline void checkStringNotNullOrEmpty(const char* s) {
+	/// <summary>
+	/// Checks whether a string is null or zero length.
+	/// </summary>
+	/// <param name="s">The (wstring, std::string, u16string, u32string) to check for zero length.</param>
+	/// <exception cref="logic_error">Raised if s is empty</exception>
+	/// <remarks>
+	/// Note that an exception is only raised if the string has exactly zero length; a string with a single space (for example) would be fine
+	/// </remarks>
+	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
+	inline void checkStringNotNullOrEmpty(const char* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
 		if (s == 0) {
-			throw std::logic_error(defaultNullPointerMessage);
+			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
+		} else if(std::strlen(s) == 0) {
+			throwWithMessage(defaultEmptyStringMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
-		if (std::strlen(s) == 0) {
-			throw std::logic_error(defaultEmptyStringMessage);
+	}
+	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
+	inline void checkStringNotNullOrEmpty(char* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+		if (s == 0) {
+			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
+		}
+		else if (std::strlen(s) == 0) {
+			throwWithMessage(defaultEmptyStringMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 	}
 
-	template<typename T1> inline void checkStringNotNullOrEmpty(const char* s, T1 messageArg1) {
-		if (s == 0 || std::strlen(s) == 0) {
-			throwWithMessage({ toTypeValue(messageArg1) });
-		}
-	}
-	template<typename S,typename T1> inline void checkStringNotNullOrEmpty(const S& s, T1 messageArg1) {
-		if (s.empty() == 0) {
-			throwWithMessage({ toTypeValue(messageArg1) });
+	template<typename S, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
+	inline void checkStringNotNullOrEmpty(const S& s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+		// If you get a compiler error like: left of .empty must have class/struct/union
+		// in the line below, then you have not passed a string as firt param to checkStringNotNullOrEmpty 
+		if (s.empty()) {
+			throwWithMessage(defaultEmptyStringMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 	}
 
-	template<typename T1, typename T2> inline void checkStringNotNullOrEmpty(const char* s, T1 messageArg1, T2 messageArg2) {
-		if (s == 0 || std::strlen(s) == 0) {
-			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
+	template<typename S, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
+	inline void checkStringNotNullOrEmpty(S* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+		if (s == 0) {
+			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
+		} else if (s->empty()) {
+			throwWithMessage(defaultEmptyStringMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 	}
-	template<typename S, typename T1, typename T2> inline void checkStringNotNullOrEmpty(const S& s, T1 messageArg1, T2 messageArg2) {
-		if (s.empty() == 0) {
-			throwWithMessage({ toTypeValue(messageArg1), toTypeValue(messageArg2) });
-		}
-	}
+
 	inline void checkStringNotNullOrEmptyM(const char* s, std::function<void(std::stringstream&)> messageFunc) {
 		if (s == 0 || std::strlen(s) == 0) {
+			throw std::logic_error(makeString(messageFunc));
+		}
+	}
+	template <typename S>
+	inline void checkStringNotNullOrEmptyM(const S& s, std::function<void(std::stringstream&)> messageFunc) {
+		if (s.empty()) {
+			throw std::logic_error(makeString(messageFunc));
+		}
+	}
+	template <typename S>
+	inline void checkStringNotNullOrEmptyM(const S* s, std::function<void(std::stringstream&)> messageFunc) {
+		if (s == 0 || s->empty()) {
 			throw std::logic_error(makeString(messageFunc));
 		}
 	}
@@ -332,6 +319,7 @@ namespace Integrity {
 		isCharStar,
 		isNumber, // short, int, long, long long & unsigned variants, and float, double and long double
 		isChar,
+		nonType, // placeholder for when no message argument was passed in
 	};
 	struct TypeValue {
 		DispType type;
@@ -358,10 +346,16 @@ namespace Integrity {
 		}
 	};
 
-	static std::string makeString(const std::vector<TypeValue>& items) {
+	static std::string makeString(const char* defaultMessage, const std::vector<TypeValue>& items) {
 		std::string retString = "";
 
+		bool atLeastOne = false;
+
 		for (TypeValue item : items) {
+			if (item.type == DispType::nonType) {
+				continue;
+			}
+			atLeastOne = true;
 			std::size_t braces = retString.find("{}");
 			if (braces != std::string::npos) {
 				retString = retString.replace(braces, 2, item.value);
@@ -382,6 +376,9 @@ namespace Integrity {
 					retString = retString + ", " + asString;
 				}
 			}
+		}
+		if (!atLeastOne) {
+			return defaultMessage;
 		}
 		return retString;
 	}
@@ -404,6 +401,9 @@ namespace Integrity {
 
 	template<typename T> TypeValue toTypeValue(T primitive) {
 		return TypeValue(DispType::isNumber, std::to_string(primitive));
+	}
+	template<> TypeValue toTypeValue<NonType>(NonType value) {
+		return TypeValue(DispType::nonType, "");
 	}
 	template<> TypeValue toTypeValue<bool>(const bool value) {
 		return TypeValue(DispType::isBool, value ? "True" : "False");
@@ -451,13 +451,11 @@ namespace Integrity {
 	/*
 	* see https://dbj.org/c17-codecvt-deprecated-panic/
 	*/
-	template<typename F> inline std::string toStdString(F str) noexcept
-	{
+	template<typename F> inline std::string toStdString(F str) {
 		if (str.empty())
 			return {};
 		return { std::begin(str), std::end(str) };
 	};
-
 	template<> TypeValue toTypeValue<std::wstring>(std::wstring value) {
 		return TypeValue(DispType::isString, toStdString(value));
 	}
@@ -482,13 +480,13 @@ namespace Integrity {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-	static void throwWithMessage(const std::vector<Integrity::TypeValue>& items) {
-		std::string exceptionMessage = makeString(items);
+	static void throwWithMessage(const char* defaultMessage, const std::vector<Integrity::TypeValue>& items) {
+		std::string exceptionMessage = makeString(defaultMessage, items);
 		throw std::logic_error(exceptionMessage);
 	}
 #pragma GCC diagnostic pop
 
-	template<typename T> static std::string getFloatAppropriateMessage(T value) {
+	template<typename T> static const char* getFloatAppropriateMessage(T value) {
 		if (std::isnan(value)) {
 			return "NaN";
 		}
@@ -501,17 +499,6 @@ namespace Integrity {
 			}
 		}
 		return "Error: expected invalid float";
-	}
-
-	template<> std::string throwInvalidFloat<float>(float value)
-	{
-		throw std::logic_error(getFloatAppropriateMessage(value));
-	}
-	template<> std::string throwInvalidFloat<double>(double value) {
-		throw std::logic_error(getFloatAppropriateMessage(value));
-	}
-	template<> std::string throwInvalidFloat<long double>(long double value) {
-		throw std::logic_error(getFloatAppropriateMessage(value));
 	}
 }
 

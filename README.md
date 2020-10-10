@@ -9,10 +9,12 @@ Tested on
 * gcc 8
 * gcc 9
 * gcc 10.1 & 10.2
+* x86-64 clang 6.0.0 onwards
 
 Does not compile on 
 * Visual Studio C++11
 * gcc 5.5
+* x86-64 clang 5.0.0
 
 # How to use in your code
 Grab the file integrity.h from github and drop into your includes directory.
