@@ -79,7 +79,7 @@ namespace Integrity {
 	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
 	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
 	template<typename NONBOOL, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void check(NONBOOL youNeedABoolHere, M1 m1 = NonType::Singleton(), M2 m2 = NonType::Singleton(), M3 m3 = NonType::Singleton(), M4 m4 = NonType::Singleton());
+	inline void check(NONBOOL youNeedABoolHere, M1 m1 = NonType::Singleton(), M2 m2 = NonType::Singleton(), M3 m3 = NonType::Singleton(), M4 m4 = NonType::Singleton()) = delete;
 
 	/// <summary>
 	/// Checks whether a condition is true, if not raises a logic_error
