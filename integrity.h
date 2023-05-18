@@ -201,7 +201,7 @@ namespace Integrity {
 	/// <param name="pointer">a pointer to check for nullness</param>
 	/// <exception cref="logic_error">message will be 'Null pointer'</exception>
 	inline void checkNotNull(const void* pointer) {
-		if (pointer == 0) {
+		if (pointer == nullptr) {
 			throw std::logic_error("Null pointer");
 		}
 	}
@@ -213,7 +213,7 @@ namespace Integrity {
 	/// <param name="message">message to use in the exception</param>
 	/// <exception cref="logic_error"></exception>
 	inline void checkNotNull(const void* pointer, const char* message) {
-		if (pointer == 0) {
+		if (pointer == nullptr) {
 			throw std::logic_error(message);
 		}
 	}
@@ -229,7 +229,7 @@ namespace Integrity {
 	/// <exception cref="logic_error"></exception>
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
 	inline void checkNotNull(const void* pointer, M1 & m1 = nt, M2 & m2 = nt, M3 & m3 = nt, M4 & m4 = nt) {
-		if (pointer == 0) {
+		if (pointer == nullptr) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 	}
@@ -244,7 +244,7 @@ namespace Integrity {
 	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
 	/// </remarks>
 	inline void checkNotNullM(const void* pointer, std::function<void(std::stringstream&)> messageFunc) {
-		if (pointer == 0) {
+		if (pointer == nullptr) {
 			throw std::logic_error(makeString(messageFunc));
 		}
 	}
@@ -263,7 +263,7 @@ namespace Integrity {
 	/// </remarks>
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
 	inline void checkStringNotNullOrEmpty(const char* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
-		if (s == 0) {
+		if (s == nullptr) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		} else if(std::strlen(s) == 0) {
 			throwWithMessage(defaultEmptyStringMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
@@ -271,7 +271,7 @@ namespace Integrity {
 	}
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
 	inline void checkStringNotNullOrEmpty(char* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
-		if (s == 0) {
+		if (s == nullptr) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 		else if (std::strlen(s) == 0) {
@@ -386,8 +386,8 @@ namespace Integrity {
 		}
 		return retString;
 	}
-		if (messageFunc == 0) {
 	static std::string makeString(const std::function<void(std::stringstream&)>& messageFunc) {
+		if (messageFunc == nullptr) {
 			return defaultExceptionMessage;
 		}
 
