@@ -31,12 +31,21 @@ namespace Integrity {
 	template<typename T> static const char* getFloatAppropriateMessage(T value);
 	template<typename T> TypeValue toTypeValue(T primitive);
 
-	typedef std::stringstream& out;
+	using out = std::stringstream &;
+
+
 
 	class NonType {
-	};
+	private:
+		NonType() {};
 
-	NonType nt;
+	public:
+		static NonType& Singleton()
+		{
+			static NonType Singleton;
+			return Singleton;
+		}
+	};
 
 	// ******************************************************************************************************************
 	// * -------------------------------------------------- check------------------------------------------------------ *
@@ -70,7 +79,7 @@ namespace Integrity {
 	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
 	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
 	template<typename NONBOOL, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	void check(NONBOOL youNeedABoolHere, M1 m1 = nt, M2 m2 = nt, M3 m3 = nt, M4 m4 = nt);
+	inline void check(NONBOOL youNeedABoolHere, M1 m1 = NonType::Singleton(), M2 m2 = NonType::Singleton(), M3 m3 = NonType::Singleton(), M4 m4 = NonType::Singleton());
 
 	/// <summary>
 	/// Checks whether a condition is true, if not raises a logic_error
@@ -82,7 +91,7 @@ namespace Integrity {
 	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error">Raised if condition is false</exception>
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	void check(bool condition, M1 m1 = nt, M2 m2 = nt, M3 m3 = nt, M4 m4 = nt) {
+	inline void check(bool condition, M1 m1 = NonType::Singleton(), M2 m2 = NonType::Singleton(), M3 m3 = NonType::Singleton(), M4 m4 = NonType::Singleton()) {
 		if (!condition) {
 			throwWithMessage(defaultExceptionMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
@@ -142,7 +151,7 @@ namespace Integrity {
 	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error"></exception>
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	void fail(M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+	inline void fail(const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
 		throwWithMessage(defaultExceptionMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 	}
 
@@ -168,7 +177,7 @@ namespace Integrity {
 	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error"></exception>
 	template<typename N, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkIsValidNumber(const N value, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+	inline void checkIsValidNumber(const N value, const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
 		if (std::isnan(value) || std::isinf(value)) {
 			const char* defaultMessage = getFloatAppropriateMessage(value);
 			throwWithMessage(defaultMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
@@ -228,7 +237,7 @@ namespace Integrity {
 	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error"></exception>
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkNotNull(const void* pointer, M1 & m1 = nt, M2 & m2 = nt, M3 & m3 = nt, M4 & m4 = nt) {
+	inline void checkNotNull(const void* pointer, const M1 & m1 = NonType::Singleton(), const M2 & m2 = NonType::Singleton(), const M3 & m3 = NonType::Singleton(), const M4 & m4 = NonType::Singleton()) {
 		if (pointer == nullptr) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
@@ -262,7 +271,7 @@ namespace Integrity {
 	/// Note that an exception is only raised if the string has exactly zero length; a string with a single space (for example) would be fine
 	/// </remarks>
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkStringNotNullOrEmpty(const char* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+	inline void checkStringNotNullOrEmpty(const char* s, const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
 		if (s == nullptr) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		} else if(std::strlen(s) == 0) {
@@ -270,7 +279,7 @@ namespace Integrity {
 		}
 	}
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkStringNotNullOrEmpty(char* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+	inline void checkStringNotNullOrEmpty(char* s, const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
 		if (s == nullptr) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
@@ -280,7 +289,7 @@ namespace Integrity {
 	}
 
 	template<typename S, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkStringNotNullOrEmpty(const S& s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+	inline void checkStringNotNullOrEmpty(const S& s, const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
 		// If you get a compiler error like: left of .empty must have class/struct/union
 		// in the line below, then you have not passed a string as firt param to checkStringNotNullOrEmpty 
 		if (s.empty()) {
@@ -289,7 +298,7 @@ namespace Integrity {
 	}
 
 	template<typename S, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkStringNotNullOrEmpty(S* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+	inline void checkStringNotNullOrEmpty(S* s, const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
 		if (s == 0) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		} else if (s->empty()) {
