@@ -403,22 +403,22 @@ namespace Integrity {
 		}
 	}
 
-	template<typename T> TypeValue toTypeValue(T primitive) {
+	template<typename T> inline TypeValue toTypeValue(T primitive) {
 		return TypeValue(DispType::isNumber, std::to_string(primitive));
 	}
-	template<> TypeValue toTypeValue<NonType>(NonType value) {
+	template<> inline TypeValue toTypeValue<NonType>(NonType value) {
 		return TypeValue(DispType::nonType, "");
 	}
-	template<> TypeValue toTypeValue<bool>(const bool value) {
+	template<> inline TypeValue toTypeValue<bool>(const bool value) {
 		return TypeValue(DispType::isBool, value ? "True" : "False");
 	}
-	template<> TypeValue toTypeValue<char>(const char value) {
+	template<> inline TypeValue toTypeValue<char>(const char value) {
 		return TypeValue(DispType::isChar, std::string(1, value));
 	}
-	template<> TypeValue toTypeValue<unsigned char>(const unsigned char value) {
+	template<> inline TypeValue toTypeValue<unsigned char>(const unsigned char value) {
 		return TypeValue(DispType::isChar, std::string(1, value));
 	}
-	template<> TypeValue toTypeValue<char16_t>(const char16_t value) {
+	template<> inline TypeValue toTypeValue<char16_t>(const char16_t value) {
 		std::stringstream ss;
 		if (value > 0xff) {
 			ss << "0x" << std::hex << std::setfill('0') << std::setw(2 * sizeof(char16_t)) << std::uppercase << (long) value;
@@ -428,7 +428,7 @@ namespace Integrity {
 		}
 		return TypeValue(DispType::isChar, ss.str());
 	}
-	template<> TypeValue toTypeValue<char32_t>(const char32_t value) {
+	template<> inline TypeValue toTypeValue<char32_t>(const char32_t value) {
 		std::stringstream ss;
 		if (value > 0xff) {
 			ss << "0x" << std::hex << std::setfill('0') << std::setw(2 * sizeof(char32_t)) << std::uppercase << (long) value;
@@ -438,7 +438,7 @@ namespace Integrity {
 		}
 		return TypeValue(DispType::isChar, ss.str());
 	}
-	template<> TypeValue toTypeValue<wchar_t>(const wchar_t value) {
+	template<> inline TypeValue toTypeValue<wchar_t>(const wchar_t value) {
 		std::stringstream ss;
 		if (value > 0xff) {
 			ss << "0x" << std::hex << std::setfill('0') << std::setw(2 * sizeof(wchar_t)) << std::uppercase << (long) value;
@@ -448,7 +448,7 @@ namespace Integrity {
 		}
 		return TypeValue(DispType::isChar, ss.str());
 	}
-	TypeValue toTypeValue(const std::string& value) {
+	inline TypeValue toTypeValue(const std::string& value) {
 		return TypeValue(DispType::isString, value);
 	}
 	// string conversions...
@@ -460,16 +460,16 @@ namespace Integrity {
 			return {};
 		return { std::begin(str), std::end(str) };
 	};
-	template<> TypeValue toTypeValue<std::wstring>(std::wstring value) {
+	template<> inline TypeValue toTypeValue<std::wstring>(std::wstring value) {
 		return TypeValue(DispType::isString, toStdString(value));
 	}
-	template<> TypeValue toTypeValue<std::u16string>(std::u16string value) {
+	template<> inline TypeValue toTypeValue<std::u16string>(std::u16string value) {
 		return TypeValue(DispType::isString, toStdString(value));
 	}
-	template<> TypeValue toTypeValue<std::u32string>(std::u32string value) {
+	template<> inline TypeValue toTypeValue<std::u32string>(std::u32string value) {
 		return TypeValue(DispType::isString, toStdString(value));
 	}
-	template<> TypeValue toTypeValue<const char*>(const char* str) {
+	template<> inline TypeValue toTypeValue<const char*>(const char* str) {
 		return TypeValue(DispType::isCharStar, std::string(str));
 	}
 	/*
