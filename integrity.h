@@ -26,7 +26,7 @@ namespace Integrity {
 	enum class DispType;
 	struct TypeValue;
 	static std::string makeString(const char* defaultMessage, const std::vector<TypeValue>& items);
-	static std::string makeString(std::function<void(std::stringstream&)> messageFunc);
+	static std::string makeString(const std::function<void(std::stringstream&)>& messageFunc);
 	static void throwWithMessage(const char* defaultMessage, const std::vector<Integrity::TypeValue>& items);
 	template<typename T> static const char* getFloatAppropriateMessage(T value);
 	template<typename T> TypeValue toTypeValue(T primitive);
@@ -88,7 +88,7 @@ namespace Integrity {
 		}
 	}
 
-	template<typename B> inline void checkM(B condition, const std::function<void(std::stringstream&)> messageFunc);
+	template<typename B> inline void checkM(B condition, const std::function<void(std::stringstream&)>& messageFunc)=delete;
 
 	/// <summary>
 	/// Checks whether a condition is true, if not raises a logic_error where you can pass a lambda function to build the message
@@ -99,7 +99,7 @@ namespace Integrity {
 	/// <remarks>
 	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
 	/// </remarks> 
-	template<> inline void checkM<bool>(bool condition, const std::function<void(std::stringstream&)> messageFunc) {
+	template<> inline void checkM<bool>(bool condition, const std::function<void(std::stringstream&)>& messageFunc) {
 		if (!condition) {
 			throw std::logic_error(makeString(messageFunc));
 		}
@@ -129,7 +129,7 @@ namespace Integrity {
 	/// <remarks>
 	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
 	/// </remarks>
-	inline void failM(std::function<void(std::stringstream&)> messageFunc) {
+	inline void failM(const std::function<void(std::stringstream&)>& messageFunc) {
 		throw std::logic_error(makeString(messageFunc));
 	}
 
@@ -184,7 +184,8 @@ namespace Integrity {
 	/// <remarks>
 	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
 	/// </remarks>
-	template<typename N> inline void checkIsValidNumberM(const N value, std::function<void(std::stringstream&)> messageFunc) {
+	template<typename N> 
+	inline void checkIsValidNumberM(const N value, const std::function<void(std::stringstream&)>& messageFunc) {
 		if (std::isnan(value) || std::isinf(value)) {
 			throw std::logic_error(makeString(messageFunc));
 		}
@@ -296,19 +297,19 @@ namespace Integrity {
 		}
 	}
 
-	inline void checkStringNotNullOrEmptyM(const char* s, std::function<void(std::stringstream&)> messageFunc) {
+	inline void checkStringNotNullOrEmptyM(const char* s, const std::function<void(std::stringstream&)>& messageFunc) {
 		if (s == 0 || std::strlen(s) == 0) {
 			throw std::logic_error(makeString(messageFunc));
 		}
 	}
 	template <typename S>
-	inline void checkStringNotNullOrEmptyM(const S& s, std::function<void(std::stringstream&)> messageFunc) {
+	inline void checkStringNotNullOrEmptyM(const S& s, const std::function<void(std::stringstream&)>& messageFunc) {
 		if (s.empty()) {
 			throw std::logic_error(makeString(messageFunc));
 		}
 	}
 	template <typename S>
-	inline void checkStringNotNullOrEmptyM(const S* s, std::function<void(std::stringstream&)> messageFunc) {
+	inline void checkStringNotNullOrEmptyM(const S* s, const std::function<void(std::stringstream&)>& messageFunc) {
 		if (s == 0 || s->empty()) {
 			throw std::logic_error(makeString(messageFunc));
 		}
@@ -385,8 +386,8 @@ namespace Integrity {
 		}
 		return retString;
 	}
-	static std::string makeString(std::function<void(std::stringstream&)> messageFunc) {
 		if (messageFunc == 0) {
+	static std::string makeString(const std::function<void(std::stringstream&)>& messageFunc) {
 			return defaultExceptionMessage;
 		}
 
