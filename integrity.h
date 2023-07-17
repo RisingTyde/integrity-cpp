@@ -26,17 +26,26 @@ namespace Integrity {
 	enum class DispType;
 	struct TypeValue;
 	static std::string makeString(const char* defaultMessage, const std::vector<TypeValue>& items);
-	static std::string makeString(std::function<void(std::stringstream&)> messageFunc);
+	static std::string makeString(const std::function<void(std::stringstream&)>& messageFunc);
 	static void throwWithMessage(const char* defaultMessage, const std::vector<Integrity::TypeValue>& items);
 	template<typename T> static const char* getFloatAppropriateMessage(T value);
 	template<typename T> TypeValue toTypeValue(T primitive);
 
-	typedef std::stringstream& out;
+	using out = std::stringstream &;
+
+
 
 	class NonType {
-	};
+	private:
+		NonType() {};
 
-	NonType nt;
+	public:
+		static NonType& Singleton()
+		{
+			static NonType Singleton;
+			return Singleton;
+		}
+	};
 
 	// ******************************************************************************************************************
 	// * -------------------------------------------------- check------------------------------------------------------ *
@@ -70,7 +79,7 @@ namespace Integrity {
 	/// <param name="youNeedABool">Did you accidentally do = instead of ==?</param>
 	/// <remarks>If this is not here then common errors like check(a = b) instead of check(a == b) do not get caught by compiler</remarks>
 	template<typename NONBOOL, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	void check(NONBOOL youNeedABoolHere, M1 m1 = nt, M2 m2 = nt, M3 m3 = nt, M4 m4 = nt);
+	inline void check(NONBOOL youNeedABoolHere, M1 m1 = NonType::Singleton(), M2 m2 = NonType::Singleton(), M3 m3 = NonType::Singleton(), M4 m4 = NonType::Singleton()) = delete;
 
 	/// <summary>
 	/// Checks whether a condition is true, if not raises a logic_error
@@ -82,13 +91,13 @@ namespace Integrity {
 	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error">Raised if condition is false</exception>
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	void check(bool condition, M1 m1 = nt, M2 m2 = nt, M3 m3 = nt, M4 m4 = nt) {
+	inline void check(bool condition, M1 m1 = NonType::Singleton(), M2 m2 = NonType::Singleton(), M3 m3 = NonType::Singleton(), M4 m4 = NonType::Singleton()) {
 		if (!condition) {
 			throwWithMessage(defaultExceptionMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 	}
 
-	template<typename B> inline void checkM(B condition, const std::function<void(std::stringstream&)> messageFunc);
+	template<typename B> inline void checkM(B condition, const std::function<void(std::stringstream&)>& messageFunc)=delete;
 
 	/// <summary>
 	/// Checks whether a condition is true, if not raises a logic_error where you can pass a lambda function to build the message
@@ -99,7 +108,7 @@ namespace Integrity {
 	/// <remarks>
 	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
 	/// </remarks> 
-	template<> inline void checkM<bool>(bool condition, const std::function<void(std::stringstream&)> messageFunc) {
+	template<> inline void checkM<bool>(bool condition, const std::function<void(std::stringstream&)>& messageFunc) {
 		if (!condition) {
 			throw std::logic_error(makeString(messageFunc));
 		}
@@ -129,7 +138,7 @@ namespace Integrity {
 	/// <remarks>
 	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
 	/// </remarks>
-	inline void failM(std::function<void(std::stringstream&)> messageFunc) {
+	inline void failM(const std::function<void(std::stringstream&)>& messageFunc) {
 		throw std::logic_error(makeString(messageFunc));
 	}
 
@@ -142,7 +151,7 @@ namespace Integrity {
 	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error"></exception>
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	void fail(M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+	inline void fail(const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
 		throwWithMessage(defaultExceptionMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 	}
 
@@ -168,7 +177,7 @@ namespace Integrity {
 	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error"></exception>
 	template<typename N, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkIsValidNumber(const N value, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+	inline void checkIsValidNumber(const N value, const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
 		if (std::isnan(value) || std::isinf(value)) {
 			const char* defaultMessage = getFloatAppropriateMessage(value);
 			throwWithMessage(defaultMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
@@ -184,7 +193,8 @@ namespace Integrity {
 	/// <remarks>
 	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
 	/// </remarks>
-	template<typename N> inline void checkIsValidNumberM(const N value, std::function<void(std::stringstream&)> messageFunc) {
+	template<typename N> 
+	inline void checkIsValidNumberM(const N value, const std::function<void(std::stringstream&)>& messageFunc) {
 		if (std::isnan(value) || std::isinf(value)) {
 			throw std::logic_error(makeString(messageFunc));
 		}
@@ -200,7 +210,7 @@ namespace Integrity {
 	/// <param name="pointer">a pointer to check for nullness</param>
 	/// <exception cref="logic_error">message will be 'Null pointer'</exception>
 	inline void checkNotNull(const void* pointer) {
-		if (pointer == 0) {
+		if (pointer == nullptr) {
 			throw std::logic_error("Null pointer");
 		}
 	}
@@ -212,7 +222,7 @@ namespace Integrity {
 	/// <param name="message">message to use in the exception</param>
 	/// <exception cref="logic_error"></exception>
 	inline void checkNotNull(const void* pointer, const char* message) {
-		if (pointer == 0) {
+		if (pointer == nullptr) {
 			throw std::logic_error(message);
 		}
 	}
@@ -227,8 +237,8 @@ namespace Integrity {
 	/// <param name="M4">Optional string or primitive</param>
 	/// <exception cref="logic_error"></exception>
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkNotNull(const void* pointer, M1 & m1 = nt, M2 & m2 = nt, M3 & m3 = nt, M4 & m4 = nt) {
-		if (pointer == 0) {
+	inline void checkNotNull(const void* pointer, const M1 & m1 = NonType::Singleton(), const M2 & m2 = NonType::Singleton(), const M3 & m3 = NonType::Singleton(), const M4 & m4 = NonType::Singleton()) {
+		if (pointer == nullptr) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 	}
@@ -243,7 +253,7 @@ namespace Integrity {
 	/// This function exists so that you can control the deferred message building by passing in a lambda function which is called if the condition fails.
 	/// </remarks>
 	inline void checkNotNullM(const void* pointer, std::function<void(std::stringstream&)> messageFunc) {
-		if (pointer == 0) {
+		if (pointer == nullptr) {
 			throw std::logic_error(makeString(messageFunc));
 		}
 	}
@@ -261,16 +271,16 @@ namespace Integrity {
 	/// Note that an exception is only raised if the string has exactly zero length; a string with a single space (for example) would be fine
 	/// </remarks>
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkStringNotNullOrEmpty(const char* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
-		if (s == 0) {
+	inline void checkStringNotNullOrEmpty(const char* s, const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
+		if (s == nullptr) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		} else if(std::strlen(s) == 0) {
 			throwWithMessage(defaultEmptyStringMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 	}
 	template<typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkStringNotNullOrEmpty(char* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
-		if (s == 0) {
+	inline void checkStringNotNullOrEmpty(char* s, const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
+		if (s == nullptr) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		}
 		else if (std::strlen(s) == 0) {
@@ -279,7 +289,7 @@ namespace Integrity {
 	}
 
 	template<typename S, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkStringNotNullOrEmpty(const S& s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+	inline void checkStringNotNullOrEmpty(const S& s, const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
 		// If you get a compiler error like: left of .empty must have class/struct/union
 		// in the line below, then you have not passed a string as firt param to checkStringNotNullOrEmpty 
 		if (s.empty()) {
@@ -288,7 +298,7 @@ namespace Integrity {
 	}
 
 	template<typename S, typename M1 = NonType, typename M2 = NonType, typename M3 = NonType, typename M4 = NonType>
-	inline void checkStringNotNullOrEmpty(S* s, M1& m1 = nt, M2& m2 = nt, M3& m3 = nt, M4& m4 = nt) {
+	inline void checkStringNotNullOrEmpty(S* s, const M1& m1 = NonType::Singleton(), const M2& m2 = NonType::Singleton(), const M3& m3 = NonType::Singleton(), const M4& m4 = NonType::Singleton()) {
 		if (s == 0) {
 			throwWithMessage(defaultNullPointerMessage, { toTypeValue(m1), toTypeValue(m2), toTypeValue(m3), toTypeValue(m4) });
 		} else if (s->empty()) {
@@ -296,19 +306,19 @@ namespace Integrity {
 		}
 	}
 
-	inline void checkStringNotNullOrEmptyM(const char* s, std::function<void(std::stringstream&)> messageFunc) {
+	inline void checkStringNotNullOrEmptyM(const char* s, const std::function<void(std::stringstream&)>& messageFunc) {
 		if (s == 0 || std::strlen(s) == 0) {
 			throw std::logic_error(makeString(messageFunc));
 		}
 	}
 	template <typename S>
-	inline void checkStringNotNullOrEmptyM(const S& s, std::function<void(std::stringstream&)> messageFunc) {
+	inline void checkStringNotNullOrEmptyM(const S& s, const std::function<void(std::stringstream&)>& messageFunc) {
 		if (s.empty()) {
 			throw std::logic_error(makeString(messageFunc));
 		}
 	}
 	template <typename S>
-	inline void checkStringNotNullOrEmptyM(const S* s, std::function<void(std::stringstream&)> messageFunc) {
+	inline void checkStringNotNullOrEmptyM(const S* s, const std::function<void(std::stringstream&)>& messageFunc) {
 		if (s == 0 || s->empty()) {
 			throw std::logic_error(makeString(messageFunc));
 		}
@@ -385,8 +395,8 @@ namespace Integrity {
 		}
 		return retString;
 	}
-	static std::string makeString(std::function<void(std::stringstream&)> messageFunc) {
-		if (messageFunc == 0) {
+	static std::string makeString(const std::function<void(std::stringstream&)>& messageFunc) {
+		if (messageFunc == nullptr) {
 			return defaultExceptionMessage;
 		}
 
@@ -402,22 +412,22 @@ namespace Integrity {
 		}
 	}
 
-	template<typename T> TypeValue toTypeValue(T primitive) {
+	template<typename T> inline TypeValue toTypeValue(T primitive) {
 		return TypeValue(DispType::isNumber, std::to_string(primitive));
 	}
-	template<> TypeValue toTypeValue<NonType>(NonType value) {
+	template<> inline TypeValue toTypeValue<NonType>(NonType value) {
 		return TypeValue(DispType::nonType, "");
 	}
-	template<> TypeValue toTypeValue<bool>(const bool value) {
+	template<> inline TypeValue toTypeValue<bool>(const bool value) {
 		return TypeValue(DispType::isBool, value ? "True" : "False");
 	}
-	template<> TypeValue toTypeValue<char>(const char value) {
+	template<> inline TypeValue toTypeValue<char>(const char value) {
 		return TypeValue(DispType::isChar, std::string(1, value));
 	}
-	template<> TypeValue toTypeValue<unsigned char>(const unsigned char value) {
+	template<> inline TypeValue toTypeValue<unsigned char>(const unsigned char value) {
 		return TypeValue(DispType::isChar, std::string(1, value));
 	}
-	template<> TypeValue toTypeValue<char16_t>(const char16_t value) {
+	template<> inline TypeValue toTypeValue<char16_t>(const char16_t value) {
 		std::stringstream ss;
 		if (value > 0xff) {
 			ss << "0x" << std::hex << std::setfill('0') << std::setw(2 * sizeof(char16_t)) << std::uppercase << (long) value;
@@ -427,7 +437,7 @@ namespace Integrity {
 		}
 		return TypeValue(DispType::isChar, ss.str());
 	}
-	template<> TypeValue toTypeValue<char32_t>(const char32_t value) {
+	template<> inline TypeValue toTypeValue<char32_t>(const char32_t value) {
 		std::stringstream ss;
 		if (value > 0xff) {
 			ss << "0x" << std::hex << std::setfill('0') << std::setw(2 * sizeof(char32_t)) << std::uppercase << (long) value;
@@ -437,7 +447,7 @@ namespace Integrity {
 		}
 		return TypeValue(DispType::isChar, ss.str());
 	}
-	template<> TypeValue toTypeValue<wchar_t>(const wchar_t value) {
+	template<> inline TypeValue toTypeValue<wchar_t>(const wchar_t value) {
 		std::stringstream ss;
 		if (value > 0xff) {
 			ss << "0x" << std::hex << std::setfill('0') << std::setw(2 * sizeof(wchar_t)) << std::uppercase << (long) value;
@@ -447,7 +457,7 @@ namespace Integrity {
 		}
 		return TypeValue(DispType::isChar, ss.str());
 	}
-	TypeValue toTypeValue(const std::string& value) {
+	inline TypeValue toTypeValue(const std::string& value) {
 		return TypeValue(DispType::isString, value);
 	}
 	// string conversions...
@@ -459,16 +469,16 @@ namespace Integrity {
 			return {};
 		return { std::begin(str), std::end(str) };
 	};
-	template<> TypeValue toTypeValue<std::wstring>(std::wstring value) {
+	template<> inline TypeValue toTypeValue<std::wstring>(std::wstring value) {
 		return TypeValue(DispType::isString, toStdString(value));
 	}
-	template<> TypeValue toTypeValue<std::u16string>(std::u16string value) {
+	template<> inline TypeValue toTypeValue<std::u16string>(std::u16string value) {
 		return TypeValue(DispType::isString, toStdString(value));
 	}
-	template<> TypeValue toTypeValue<std::u32string>(std::u32string value) {
+	template<> inline TypeValue toTypeValue<std::u32string>(std::u32string value) {
 		return TypeValue(DispType::isString, toStdString(value));
 	}
-	template<> TypeValue toTypeValue<const char*>(const char* str) {
+	template<> inline TypeValue toTypeValue<const char*>(const char* str) {
 		return TypeValue(DispType::isCharStar, std::string(str));
 	}
 	/*
